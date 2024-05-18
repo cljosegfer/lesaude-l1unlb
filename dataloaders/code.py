@@ -9,9 +9,11 @@ from torch.utils.data import Dataset
 class CODE():
     def __init__(self, hdf5_path = '/home/josegfer/code/code14/code14.h5', 
                  metadata_path = '/home/josegfer/code/code14/exams.csv', 
+                 reports_path = '/home/josegfer/code/code14/BioBERTpt_text_report_crop.h5', 
                  val_size = 0.1, tst_size = 0.05):
         self.hdf5_file = h5py.File(hdf5_path, "r")
         self.metadata = pd.read_csv(metadata_path)
+        self.reports = h5py.File(reports_path, "r")
 
         self.val_size = val_size
         self.tst_size = tst_size
@@ -60,17 +62,19 @@ class CODE():
 
 class CODEsplit(Dataset):
     def __init__(self, database, split_idx_dict, 
-                 tracing_col = 'tracings', exam_id_col = 'exam_id', output_col = ["1dAVb", "RBBB", "LBBB", "SB", "AF", "ST"]):
+                 tracing_col = 'tracings', exam_id_col = 'exam_id', output_col = ["1dAVb", "RBBB", "LBBB", "SB", "AF", "ST"], text_col = 'embeddings'):
         self.database = database
         self.split_idx_dict = split_idx_dict
 
         self.tracing_col = tracing_col
         self.exam_id_col = exam_id_col
         self.output_col = output_col
+        self.text_col = text_col
     
     def __len__(self):
         return len(self.split_idx_dict[self.exam_id_col])
     
     def __getitem__(self, idx):
         return {'X': self.database.hdf5_file[self.tracing_col][self.split_idx_dict['h5_idx'][idx]], 
+                'H': self.database.reports[self.text_col][self.split_idx_dict['h5_idx'][idx]], 
                 'y': self.database.metadata[self.output_col].loc[self.split_idx_dict['csv_idx'][idx]].values}
