@@ -10,20 +10,21 @@ class CODE():
     def __init__(self, hdf5_path = '/home/josegfer/code/code14/code14.h5', 
                  metadata_path = '/home/josegfer/code/code14/exams.csv', 
                  reports_path = '/home/josegfer/code/code14/BioBERTpt_text_report_crop.h5', 
-                 val_size = 0.1, tst_size = 0.05):
+                 val_size = 0.05, trn_size = 0.05):
         self.hdf5_file = h5py.File(hdf5_path, "r")
         self.metadata = pd.read_csv(metadata_path)
         self.reports = h5py.File(reports_path, "r")
 
         self.val_size = val_size
-        self.tst_size = tst_size
+        self.tst_size = trn_size
 
         trn_metadata, val_metadata, tst_metadata = self.split()
         self.check_dataleakage(trn_metadata, val_metadata, tst_metadata)
         
-        self.trn_idx_dict = self.get_idx_dict(trn_metadata)
+        self.pretrn_idx_dict = self.get_idx_dict(trn_metadata)
         self.val_idx_dict = self.get_idx_dict(val_metadata)
-        self.tst_idx_dict = self.get_idx_dict(tst_metadata)
+        self.trn_idx_dict = self.get_idx_dict(tst_metadata)
+        self.tst_idx_dict = 'test'
 
     def split(self, patient_id_col = 'patient_id'):
         patient_ids = self.metadata[patient_id_col].unique()
@@ -63,13 +64,19 @@ class CODE():
 class CODEsplit(Dataset):
     def __init__(self, database, split_idx_dict, 
                  tracing_col = 'tracings', exam_id_col = 'exam_id', output_col = ["1dAVb", "RBBB", "LBBB", "SB", "AF", "ST"], text_col = 'embeddings'):
-        self.database = database
-        self.split_idx_dict = split_idx_dict
+        if split_idx_dict == 'test':
+            self.database = CODEtest()
+            self.split_idx_dict = self.database.metadata # so we can get use the same __len__()
+            self.text_col = tracing_col # so we can get use the same __getitem__()
+            print('using test ds, H is treated as X')
+        else:
+            self.database = database
+            self.split_idx_dict = split_idx_dict
+            self.text_col = text_col
 
         self.tracing_col = tracing_col
         self.exam_id_col = exam_id_col
         self.output_col = output_col
-        self.text_col = text_col
     
     def __len__(self):
         return len(self.split_idx_dict[self.exam_id_col])
@@ -78,3 +85,14 @@ class CODEsplit(Dataset):
         return {'X': self.database.hdf5_file[self.tracing_col][self.split_idx_dict['h5_idx'][idx]], 
                 'H': self.database.reports[self.text_col][self.split_idx_dict['h5_idx'][idx]], 
                 'y': self.database.metadata[self.output_col].loc[self.split_idx_dict['csv_idx'][idx]].values}
+
+class CODEtest():
+    def __init__(self, hdf5_path = '/home/josegfer/code/codetest/data/ecg_tracings.hdf5', 
+                 metadata_path = '/home/josegfer/code/codetest/data/annotations/gold_standard.csv'):
+        self.hdf5_file = h5py.File(hdf5_path, "r")
+        self.metadata = pd.read_csv(metadata_path)
+
+        self.metadata['exam_id'] = self.metadata.index # so we can get use the same __len__()
+        self.metadata['h5_idx'] = self.metadata.index # so we can get use the same __getitem__()
+        self.metadata['csv_idx'] = self.metadata.index # so we can get use the same __getitem__()
+        self.reports = self.hdf5_file # so we can get use the same __getitem__()
