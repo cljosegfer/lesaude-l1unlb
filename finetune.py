@@ -46,9 +46,10 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 database = DS()
 model = ResnetBaseline(n_classes = n_classes)
-model = load_backbone(model, 'output/backbone/backbone.pt')['model']
-runner = Runner(device = device, model = model, database = database, split = DSsplit, model_label = args.model_label)
+# model = load_backbone(model, 'output/backbone/backbone.pt')['model']
+model = load_backbone(model, 'output/code/partial.pt')['model']
 # model = torch.load('output/{}/partial.pt'.format(args.model_label, args.model_label))
+runner = Runner(device = device, model = model, database = database, split = DSsplit, model_label = args.model_label)
 
 # run
 runner.train(epochs)

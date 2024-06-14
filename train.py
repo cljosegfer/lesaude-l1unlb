@@ -8,7 +8,7 @@ from runners.train import Runner
 
 # argparser
 parser = argparse.ArgumentParser()
-parser.add_argument('model_label', type = str, choices = ['code', 'cpsc2018', 'ptbxl', 'ningbo'])
+parser.add_argument('model_label', type = str, choices = ['code', 'code15', 'cpsc2018', 'ptbxl', 'ningbo'])
 args = parser.parse_args()
 
 print(args.model_label)
@@ -17,6 +17,13 @@ if args.model_label == 'code':
     from dataloaders.code import CODEsplit as DSsplit
 
     epochs = 30
+    n_classes = 6
+
+if args.model_label == 'code15':
+    from dataloaders.code15 import CODE as DS
+    from dataloaders.code15 import CODEsplit as DSsplit
+
+    epochs = 15
     n_classes = 6
 
 if args.model_label == 'cpsc2018':
@@ -45,8 +52,8 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 database = DS()
 model = ResnetBaseline(n_classes = n_classes)
-runner = Runner(device = device, model = model, database = database, split = DSsplit, model_label = args.model_label)
 # model = torch.load('output/{}/partial.pt'.format(args.model_label, args.model_label))
+runner = Runner(device = device, model = model, database = database, split = DSsplit, model_label = args.model_label)
 
 # run
 runner.train(epochs)

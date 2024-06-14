@@ -23,7 +23,8 @@ class CODE():
         
         self.pretrn_idx_dict = self.get_idx_dict(trn_metadata)
         self.val_idx_dict = self.get_idx_dict(val_metadata)
-        self.trn_idx_dict = self.get_idx_dict(tst_metadata)
+        # self.trn_idx_dict = self.get_idx_dict(tst_metadata)
+        self.trn_idx_dict = self.get_idx_dict(trn_metadata)
         self.tst_idx_dict = 'test'
 
     def split(self, patient_id_col = 'patient_id'):
