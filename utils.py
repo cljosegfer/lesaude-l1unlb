@@ -4,7 +4,7 @@ import numpy as np
 import torch
 import json
 
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
 from collections import OrderedDict
 
 SIGNAL_CROP_LEN = 2560
@@ -99,6 +99,7 @@ def metrics_table(all_binary_results, all_true_labels):
     precision_scores = []
     recall_scores = []
     f1_scores = []
+    auc_scores = []
 
     num_classes = all_binary_results.shape[-1]
     for class_idx in range(num_classes):
@@ -106,24 +107,43 @@ def metrics_table(all_binary_results, all_true_labels):
         class_true_labels = all_true_labels[:, class_idx].cpu().numpy()
 
         accuracy = accuracy_score(class_true_labels, class_binary_results)
-        precision = precision_score(
-            class_true_labels, class_binary_results, zero_division=0
-        )
-        recall = recall_score(
-            class_true_labels, class_binary_results, zero_division=0
-        )
+        precision = precision_score(class_true_labels, class_binary_results, zero_division=0)
+        recall = recall_score(class_true_labels, class_binary_results, zero_division=0)
         f1 = f1_score(class_true_labels, class_binary_results, zero_division=0)
+        auc = roc_auc_score(class_true_labels, class_binary_results)
 
         accuracy_scores.append(accuracy)
         precision_scores.append(precision)
         recall_scores.append(recall)
         f1_scores.append(f1)
+        auc_scores.append(auc)
+    
+    # normal
+    # normal_idx = torch.sum(all_true_labels, dim = 1) == 0
+    
+    # class_binary_results = torch.sum(all_binary_results, axis = 1).bool()[normal_idx].cpu().numpy()
+    # class_true_labels = torch.sum(all_true_labels, axis = 1).bool()[normal_idx].cpu().numpy()
+    class_binary_results = (~torch.sum(all_binary_results, axis = 1).bool()).int().cpu().numpy()
+    class_true_labels = (~torch.sum(all_true_labels, axis = 1).bool()).int().cpu().numpy()
+
+    accuracy = accuracy_score(class_true_labels, class_binary_results)
+    precision = precision_score(class_true_labels, class_binary_results, zero_division=0)
+    recall = recall_score(class_true_labels, class_binary_results, zero_division=0)
+    f1 = f1_score(class_true_labels, class_binary_results, zero_division=0)
+    auc = roc_auc_score(class_true_labels, class_binary_results)
+    
+    accuracy_scores.append(accuracy)
+    precision_scores.append(precision)
+    recall_scores.append(recall)
+    f1_scores.append(f1)
+    auc_scores.append(auc)
 
     metrics_dict = {
         "Accuracy": accuracy_scores,
-        "Precision": precision_scores,
-        "Recall": recall_scores,
+        # "Precision": precision_scores,
+        # "Recall": recall_scores,
         "F1 Score": f1_scores,
+        "AUC ROC": auc_scores,
     }
 
     return metrics_dict
