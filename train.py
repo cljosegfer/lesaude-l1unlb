@@ -8,7 +8,7 @@ from runners.train import Runner
 
 # argparser
 parser = argparse.ArgumentParser()
-parser.add_argument('model_label', type = str, choices = ['code', 'code15', 'cpsc2018', 'ptbxl', 'ningbo'])
+parser.add_argument('model_label', type = str, choices = ['code', 'code15', 'codenk', 'cpsc2018', 'ptbxl', 'ningbo'])
 args = parser.parse_args()
 
 print(args.model_label)
@@ -22,6 +22,13 @@ if args.model_label == 'code':
 if args.model_label == 'code15':
     from dataloaders.code15 import CODE as DS
     from dataloaders.code15 import CODEsplit as DSsplit
+
+    epochs = 15
+    n_classes = 6
+
+if args.model_label == 'codenk':
+    from dataloaders.codenk import CODE as DS
+    from dataloaders.codenk import CODEsplit as DSsplit
 
     epochs = 15
     n_classes = 6
