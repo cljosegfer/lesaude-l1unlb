@@ -30,7 +30,7 @@ if args.model_label == 'codenk':
     from dataloaders.codenk import CODE as DS
     from dataloaders.codenk import CODEsplit as DSsplit
 
-    epochs = 15
+    epochs = 10
     n_classes = 6
 
 if args.model_label == 'cpsc2018':
